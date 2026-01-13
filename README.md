@@ -345,8 +345,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Questions or feedback? Reach out:
 
-- Joseph: [GitHub Profile]
-- Eoin: [GitHub Profile]
+- Joseph: [https://github.com/josephulasii]
+- Eoin: [https://github.com/eoindn]
 
 ---
 
