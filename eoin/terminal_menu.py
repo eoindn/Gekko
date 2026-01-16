@@ -1,5 +1,5 @@
 import sys
-from main import anaylse_file, calculate_entropy,string_dump
+from main import anaylse_file, calculate_entropy,string_dump, analyse_sections
 import os
 from colorama import Back, Fore, Style
 import math
@@ -48,6 +48,7 @@ def show_menu():
     table.add_row("entropy", "Calculate file entropy")
     table.add_row("strings", "Dump strings from file")
     table.add_row("sections", "Show PE sections (if PE file)")
+    table.add_row("sections-analyse", "Analyse PE sections for anomalies")
     table.add_row("help", "Show this menu")
     table.add_row("exit", "Exit program")
     
@@ -91,9 +92,16 @@ while True:
 
         elif command == "strings":
             string_dump(filename)
+
+        elif command == "sections-analyse":
+            analyse_sections(filename)
         
         elif command == "entropy":
-            calculate_entropy(filename)
+            result = calculate_entropy(filename)
+            if result > 7:
+                console.print("[red]High entropy detected! Possible packed or encrypted file.[/red]")
+            else:
+                console.print(f"[green]Normal Entropy: {result}[/green]")
 
         else:
             console.print(f"[red]Unknown command: '{command}'. Type 'help' for available commands.[/red]")

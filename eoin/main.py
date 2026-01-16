@@ -7,6 +7,9 @@ from collections import Counter
 import re
 import pefile
 import sys
+from rich.text import Text
+from rich import print
+import hashlib
 
 
 
@@ -39,6 +42,7 @@ RED_FLAGS = [
 
 
 
+
 def calculate_entropy(data):
     if not data:
         return 0
@@ -52,7 +56,11 @@ def calculate_entropy(data):
         entropy -= probability * math.log2(probability)
     return entropy
 
-
+def hash_file(filepath):
+    with open(filepath, 'rb') as f:
+        file_data = f.read()
+        sha256_hash = hashlib.sha256(file_data).hexdigest()
+        return sha256_hash
 
 #basic anaylsis, need to put run entropy calculation via its own function
 def anaylse_file(filepath):
@@ -96,6 +104,15 @@ def string_dump(filepath):
             print(Fore.WHITE + s + Style.RESET_ALL)
 
 
+def analyse_sections(filepath):
+    pe = pefile.PE(filepath)
+    print(f"Sections in {filepath}:")
+    for section in pe.sections:
+        entropy =  section.get_entropy()
+        print(f"[bold green]Name:[/bold green] {section.Name.decode().rstrip('\\x00')}, Virtual Size: {section.Misc_VirtualSize}, Raw Size: {section.SizeOfRawData}, {"[green]" if entropy < 7 else "[red]"}Entropy: {entropy}[/]")
+        
+        
+
 
 
 
@@ -106,7 +123,8 @@ def string_dump(filepath):
 
 
 if __name__ == "__main__":
-    anaylse_file("mingw64.exe")
+    
+    print(hash_file("mingw64.exe"))
 
 
 
