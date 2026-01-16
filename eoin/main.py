@@ -7,9 +7,6 @@ from collections import Counter
 import re
 import pefile
 import sys
-from rich.text import Text
-from rich import print
-import hashlib
 
 
 
@@ -42,7 +39,6 @@ RED_FLAGS = [
 
 
 
-
 def calculate_entropy(data):
     if not data:
         return 0
@@ -56,11 +52,7 @@ def calculate_entropy(data):
         entropy -= probability * math.log2(probability)
     return entropy
 
-def hash_file(filepath):
-    with open(filepath, 'rb') as f:
-        file_data = f.read()
-        sha256_hash = hashlib.sha256(file_data).hexdigest()
-        return sha256_hash
+
 
 #basic anaylsis, need to put run entropy calculation via its own function
 def anaylse_file(filepath):
@@ -86,6 +78,14 @@ def anaylse_file(filepath):
     print(f"Type: {FILE_TYPE.stdout.strip()}")
 
 
+def analyse_sections(filepath):
+    pe = pefile.PE(filepath)
+    print(f"Sections in {filepath}:")
+    for section in pe.sections:
+        entropy =  section.get_entropy()
+        print(f"[bold green]Name:[/bold green] {section.Name.decode().rstrip('\\x00')}, Virtual Size: {section.Misc_VirtualSize}, Raw Size: {section.SizeOfRawData}, {"[green]" if entropy < 7 else "[red]"}Entropy: {entropy}[/]")
+
+
 
 
 # extracts strings from given file 
@@ -94,7 +94,7 @@ def string_dump(filepath):
     STRINGS = subprocess.run(["strings",filepath],capture_output=True,text=True).stdout.splitlines()
 
     print(f"Extracted Strings: \n")
-    for s in STRINGS[:10]:
+    for s in STRINGS:
         s_lower = s.lower()
 
         bad_string = any(flag in s_lower for flag in RED_FLAGS)
@@ -104,14 +104,44 @@ def string_dump(filepath):
             print(Fore.WHITE + s + Style.RESET_ALL)
 
 
-def analyse_sections(filepath):
+
+
+def import_check(filepath):
+
+    # dlls and import names are set to strs for manipulation using a translation table
+    # can just do dll_name = entry.dll.decode('utf-8', errors='ignore') tho
+    
     pe = pefile.PE(filepath)
-    print(f"Sections in {filepath}:")
-    for section in pe.sections:
-        entropy =  section.get_entropy()
-        print(f"[bold green]Name:[/bold green] {section.Name.decode().rstrip('\\x00')}, Virtual Size: {section.Misc_VirtualSize}, Raw Size: {section.SizeOfRawData}, {"[green]" if entropy < 7 else "[red]"}Entropy: {entropy}[/]")
+    translation_table = dict.fromkeys(map(ord, 'b'), None) 
+    
+    pe.parse_data_directories()
+    if not hasattr(pe,'DIRECTORY_ENTRY_IMPORT'):
+        print("[yellow]no Imports Found (packed/stripped?)[/yellow]")
+        return
+    
+    for entry in pe.DIRECTORY_ENTRY_IMPORT:
+        dll_name = str(entry.dll)
+        if dll_name[0] == 'b':
+            dll_name = dll_name.translate(translation_table)
+        print(dll_name)
+        for imp in entry.imports:
+            name = str(imp.name)
+            
+            
+            if name[0] == 'b':
+                name = name.translate(translation_table)
+                
+            address = imp.address
+            
+            print(f"\t {str(name)} at adress: {hex(address)}")
+
+
+  
         
         
+
+
+
 
 
 
@@ -123,8 +153,7 @@ def analyse_sections(filepath):
 
 
 if __name__ == "__main__":
-    
-    print(hash_file("mingw64.exe"))
+    import_check('mingw64.exe')
 
 
 
