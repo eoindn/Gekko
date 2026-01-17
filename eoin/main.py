@@ -7,7 +7,7 @@ from collections import Counter
 import re
 import pefile
 import sys
-
+import hashlib
 
 
 # if len(sys.argv) < 2:
@@ -37,7 +37,13 @@ RED_FLAGS = [
     "runonce", "currentversion\\run","__imp_fputwc","imp"
 ]
 
+#import hashlib
 
+def calculate_hashes(filepath):
+    with open(filepath, 'rb') as f:
+        data = f.read()
+        result = hashlib.md5(data).hexdigest()
+        return "file hash:" + result
 
 def calculate_entropy(data):
     if not data:
@@ -154,6 +160,7 @@ def import_check(filepath):
 
 if __name__ == "__main__":
     import_check('mingw64.exe')
+    print(calculate_hashes('mingw64.exe'))
 
 
 
