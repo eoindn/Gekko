@@ -8,22 +8,15 @@ import re
 import pefile
 import sys
 import hashlib
+from DANGEROUS_API import DANGEROUS_APIS;
+from rich.text import Text
+from rich import print
+from rich.console import Console
 
 
-# if len(sys.argv) < 2:
-#     print("Usage: python main.py <filename>")
-#     sys.exit()
+console = Console()
 
-# filename = sys.argv[1]
-# if not os.path.exists(filename):
-#     print(f"Error: {filename} not found")
-#     sys.exit()
-
-# size = os.path.getsize(filename)
-# print(f"Size: {size} bytes")
-
-
-
+dangerous_dictionary = DANGEROUS_APIS # imported dictionary of dangerous windows functions
 
 
 RED_FLAGS = [
@@ -43,7 +36,7 @@ def calculate_hashes(filepath):
     with open(filepath, 'rb') as f:
         data = f.read()
         result = hashlib.md5(data).hexdigest()
-        return "file hash:" + result
+        return "file hash: " + result
 
 def calculate_entropy(data):
     if not data:
@@ -84,41 +77,59 @@ def anaylse_file(filepath):
     print(f"Type: {FILE_TYPE.stdout.strip()}")
 
 
-def analyse_sections(filepath):
+def analyse_sections(filepath, verbose = False):
+    sections = []
+    entropy_per_section = {}
     pe = pefile.PE(filepath)
-    print(f"Sections in {filepath}:")
+    if verbose:
+        print(f"Sections in {filepath}:")
     for section in pe.sections:
         entropy =  section.get_entropy()
-        print(f"[bold green]Name:[/bold green] {section.Name.decode().rstrip('\\x00')}, Virtual Size: {section.Misc_VirtualSize}, Raw Size: {section.SizeOfRawData}, {"[green]" if entropy < 7 else "[red]"}Entropy: {entropy}[/]")
+        entropy_per_section[section.Name.decode().rstrip('\\x00')] = entropy
+        if verbose:
+            print(f"[bold green]Name:[/bold green] {section.Name.decode().rstrip('\\x00')}, Virtual Size: {section.Misc_VirtualSize}, Raw Size: {section.SizeOfRawData}, {"[green]" if entropy < 7 else "[red]"}Entropy: {entropy}[/]")
+        sections.append(section)
+    return entropy_per_section
 
 
 
 
 # extracts strings from given file 
-def string_dump(filepath):
+def string_dump(filepath, verbose = True):
+    strings = []
     global STRINGS 
     STRINGS = subprocess.run(["strings",filepath],capture_output=True,text=True).stdout.splitlines()
 
-    print(f"Extracted Strings: \n")
+
+   
     for s in STRINGS:
         s_lower = s.lower()
+        strings.append(s)
 
         bad_string = any(flag in s_lower for flag in RED_FLAGS)
         if bad_string:
-            print(Fore.RED + s + Style.RESET_ALL)
+            if verbose:
+                print(Fore.RED + s + Style.RESET_ALL)
         else:
-            print(Fore.WHITE + s + Style.RESET_ALL)
+            if verbose:
+                print(Fore.WHITE + s + Style.RESET_ALL)
+
+    return strings
 
 
 
+def import_check(filepath, verbose = True):
 
-def import_check(filepath):
+  
+    import_dict = {}
+
 
     # dlls and import names are set to strs for manipulation using a translation table
     # can just do dll_name = entry.dll.decode('utf-8', errors='ignore') tho
     
     pe = pefile.PE(filepath)
     translation_table = dict.fromkeys(map(ord, 'b'), None) 
+    dangerous_found = []
     
     pe.parse_data_directories()
     if not hasattr(pe,'DIRECTORY_ENTRY_IMPORT'):
@@ -129,17 +140,75 @@ def import_check(filepath):
         dll_name = str(entry.dll)
         if dll_name[0] == 'b':
             dll_name = dll_name.translate(translation_table)
-        print(dll_name)
-        for imp in entry.imports:
-            name = str(imp.name)
+
+
+        dll_dangerous = []
+
+        
+        
+        
+
+
+
+        for imp in entry.imports:  #imp refers to the function imported by the dll
             
-            
-            if name[0] == 'b':
-                name = name.translate(translation_table)
-                
+            import_name = imp.name.decode('utf-8', errors='ignore')
             address = imp.address
             
-            print(f"\t {str(name)} at adress: {hex(address)}")
+        
+            if import_name in dangerous_dictionary:
+                dangerous_found.append(import_name)
+                dll_dangerous.append(import_name)
+            # print(f"\t {str(import_name)} at adress: {hex(address)}")
+
+        if dll_dangerous:
+            if verbose:
+                console.print(f"[yellow]Potentially dangerous import found in [bold yellow]{dll_name}[/bold yellow][/yellow]")
+            for function in dll_dangerous:
+                info = dangerous_dictionary[function]
+                if verbose:
+                    console.print(f"  [bold red]{function}[/bold red] - {info['reason']}")
+
+    return dangerous_found
+
+
+
+
+
+def calculate_risk(filepath):
+    
+
+    risk = 0
+    dangerous_apis = import_check(filepath,verbose=False)
+    strings = string_dump(filepath,verbose=False)
+    entropy = analyse_sections(filepath)
+    if len(dangerous_apis) < 3 and len(dangerous_apis) > 1:
+        risk += 20
+    if len(dangerous_apis) > 3 and len(dangerous_apis) < 5:
+        risk += 40
+    elif len(dangerous_apis) > 5:
+        risk += 50 #quite a lot of dangerous imports
+
+    for s in strings:
+        if s == "keylog" or s == "keylogger":
+            risk += 100
+        if s in RED_FLAGS:
+            risk += 5
+
+    for entr in entropy.values():
+        if entr >= 6:
+            risk += 20
+
+    print(entropy)   
+        
+
+
+    print(risk)
+                
+
+                
+
+
 
 
   
@@ -159,8 +228,10 @@ def import_check(filepath):
 
 
 if __name__ == "__main__":
-    import_check('mingw64.exe')
-    print(calculate_hashes('mingw64.exe'))
+    
+ 
+    calculate_risk("mingw64.exe")
+
 
 
 
