@@ -1,5 +1,5 @@
 import sys
-from main import anaylse_file, calculate_entropy,string_dump, analyse_sections
+from main import anaylse_file, calculate_entropy,string_dump, analyse_sections, import_check, calculate_hashes
 import os
 from colorama import Back, Fore, Style
 import math
@@ -49,6 +49,8 @@ def show_menu():
     table.add_row("strings", "Dump strings from file")
     table.add_row("sections", "Show PE sections (if PE file)")
     table.add_row("sections-analyse", "Analyse PE sections for anomalies")
+    table.add_row("imports-analyse", "Returns the dll's and imports used by the pe file")
+    table.add_row("hash-file", "Return the MD5 hash of the pe file")
     table.add_row("help", "Show this menu")
     table.add_row("exit", "Exit program")
     
@@ -102,6 +104,11 @@ while True:
                 console.print("[red]High entropy detected! Possible packed or encrypted file.[/red]")
             else:
                 console.print(f"[green]Normal Entropy: {result}[/green]")
+
+        elif command == "imports-analyse":
+            console.print(import_check(filename))
+        elif command == "hash-file":
+            console.print(calculate_hashes(filename))
 
         else:
             console.print(f"[red]Unknown command: '{command}'. Type 'help' for available commands.[/red]")
