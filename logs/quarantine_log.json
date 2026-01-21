@@ -1,0 +1,50 @@
+[
+  {
+    "timestamp": "2026-01-21T14:38:01.797406",
+    "filename": ",,.,,,",
+    "original_path": "testfolder\\,,.,,,",
+    "quarantine_path": "quarantine\\,,.,,,",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file_size": 0
+  },
+  {
+    "timestamp": "2026-01-21T14:38:29.685819",
+    "filename": "kmlnbhkj",
+    "original_path": "testfolder\\kmlnbhkj",
+    "quarantine_path": "quarantine\\kmlnbhkj",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file_size": 0
+  },
+  {
+    "timestamp": "2026-01-21T14:38:40.146301",
+    "filename": ",,,,,,,,,,,,,,,,,,,,,,,",
+    "original_path": "testfolder\\,,,,,,,,,,,,,,,,,,,,,,,",
+    "quarantine_path": "quarantine\\,,,,,,,,,,,,,,,,,,,,,,,",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file_size": 0
+  },
+  {
+    "timestamp": "2026-01-21T14:41:40.517547",
+    "filename": "fff.txt",
+    "original_path": "testfolder\\fff.txt",
+    "quarantine_path": "quarantine\\fff.txt",
+    "sha256": "3b1a1b9ea4f1561c0eecc1810a40283c9aadf77ae76461c334b3ecc82cf186a7",
+    "file_size": 35
+  },
+  {
+    "timestamp": "2026-01-21T14:43:07.740754",
+    "filename": "sdaa.txt",
+    "original_path": "testfolder\\sdaa.txt",
+    "quarantine_path": "quarantine\\sdaa.txt",
+    "sha256": "0ffe1abd1a08215353c233d6e009613e95eec4253832a761af28ff37ac5a150c",
+    "file_size": 4
+  },
+  {
+    "timestamp": "2026-01-21T14:43:08.096553",
+    "filename": "s.txt",
+    "original_path": "testfolder\\s.txt",
+    "quarantine_path": "quarantine\\s.txt",
+    "sha256": "0ffe1abd1a08215353c233d6e009613e95eec4253832a761af28ff37ac5a150c",
+    "file_size": 4
+  }
+]
